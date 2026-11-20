@@ -6,11 +6,19 @@ Não é necessário acessar o SQLite, criar tabelas no jogo nem enviar nome ou e
 
 ## 1. Endereços
 
-Com o Flask rodando localmente:
+Use a URL do site publicado como endereço base da API:
+
+```text
+https://nexaplay.vercel.app
+```
+
+Para testes com Flask rodando no mesmo computador, também é possível usar:
 
 ```text
 http://127.0.0.1:5000
 ```
+
+Se a integração local não funcionar, **pode tentar usar `https://nexaplay.vercel.app`**, desde que as rotas da API estejam publicadas e funcionando nesse endereço. Basta trocar a URL base no Unity. O site abrir no navegador, sozinho, não confirma que a API esteja disponível.
 
 | Método | Rota | Para que serve |
 |---|---|---|
@@ -180,72 +188,194 @@ Exemplo de conflito:
 
 Em caso de 409, consulte o GET e resolva qual save é o mais recente. Não aumente a versão de um save antigo automaticamente para forçar o envio. Isso importa principalmente se a mesma conta jogar em dois dispositivos.
 
-## 6. Exemplo em JavaScript
+## 6. Exemplo em C# para Unity 6
 
-Compatível com `fetch` em um jogo web servido na mesma origem do Flask ou em um ambiente com suporte a `fetch`, como Node.js. Troque a base pelo endereço real do servidor.
+Compatível com Unity 6, usando `UnityWebRequest` para as requisições HTTP e `JsonUtility` para converter o JSON. Não exige pacotes externos. Crie um script chamado `NexaPlayApi.cs` em `Assets/Scripts`, anexe-o a um GameObject e configure a URL base. O exemplo já aponta para o site publicado. Para testes locais, troque para `http://127.0.0.1:5000` no Inspector da Unity.
 
-```javascript
-const API_BASE = 'http://127.0.0.1:5000';
+```csharp
+using System;
+using System.Collections;
+using System.Text;
+using UnityEngine;
+using UnityEngine.Networking;
 
-async function chamarAPI(caminho, { token, dados } = {}) {
-  const resposta = await fetch(API_BASE + caminho, {
-    method: dados === undefined ? 'GET' : 'POST',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(dados === undefined ? {} : { 'Content-Type': 'application/json' })
-    },
-    ...(dados === undefined ? {} : { body: JSON.stringify(dados) })
-  });
-  const json = await resposta.json();
-  if (!resposta.ok) {
-    const erro = new Error(json.erro || json.msg || 'Falha na API');
-    erro.status = resposta.status;
-    erro.dados = json;
-    throw erro;
-  }
-  return json;
+public class NexaPlayApi : MonoBehaviour
+{
+    [SerializeField] private string apiBase = "https://nexaplay.vercel.app";
+    private string token;
+
+    [Serializable]
+    public class LoginDados
+    {
+        public string email;
+        public string senha;
+    }
+
+    [Serializable]
+    public class LoginResposta
+    {
+        public string token;
+    }
+
+    [Serializable]
+    public class Conquista
+    {
+        public string codigo;
+        public string nome;
+        public string descricao;
+    }
+
+    [Serializable]
+    public class Progresso
+    {
+        public int usuario_id;
+        public bool sincronizado;
+        public int nivel;
+        public int xp;
+        public int versao;
+        public Conquista[] conquistas;
+        public string atualizado_em;
+    }
+
+    [Serializable]
+    public class EstadoCompleto
+    {
+        public int nivel;
+        public int xp;
+        public int versao;
+        public Conquista[] conquistas;
+    }
+
+    [Serializable]
+    public class EnvioResposta
+    {
+        public string mensagem;
+        public bool repetido;
+        public Progresso progresso;
+    }
+
+    [Serializable]
+    public class ErroApi
+    {
+        public string erro;
+        public string msg;
+        public int versao_atual;
+    }
+
+    private IEnumerator ChamarApi<T>(
+        string rota, string metodo, string corpo,
+        Action<T> sucesso, Action<int, string> falha) where T : class
+    {
+        using (var requisicao = new UnityWebRequest(apiBase.TrimEnd('/') + rota, metodo))
+        {
+            requisicao.downloadHandler = new DownloadHandlerBuffer();
+
+            if (corpo != null)
+            {
+                requisicao.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(corpo));
+                requisicao.SetRequestHeader("Content-Type", "application/json");
+            }
+
+            if (!string.IsNullOrEmpty(token) && rota != "/api/auth/login")
+                requisicao.SetRequestHeader("Authorization", "Bearer " + token);
+
+            yield return requisicao.SendWebRequest();
+
+            if (requisicao.result != UnityWebRequest.Result.Success)
+            {
+                string mensagem = requisicao.downloadHandler.text;
+                try
+                {
+                    var erro = JsonUtility.FromJson<ErroApi>(mensagem);
+                    if (!string.IsNullOrEmpty(erro.erro)) mensagem = erro.erro;
+                    else if (!string.IsNullOrEmpty(erro.msg)) mensagem = erro.msg;
+                }
+                catch (Exception) { }
+
+                if (string.IsNullOrEmpty(mensagem)) mensagem = requisicao.error;
+                falha?.Invoke((int)requisicao.responseCode, mensagem);
+                yield break;
+            }
+
+            try
+            {
+                sucesso?.Invoke(JsonUtility.FromJson<T>(requisicao.downloadHandler.text));
+            }
+            catch (Exception e)
+            {
+                falha?.Invoke((int)requisicao.responseCode, "Resposta JSON inválida: " + e.Message);
+            }
+        }
+    }
+
+    // Receba email e senha pela tela de login, sem guardar a senha no código.
+    public IEnumerator Entrar(string email, string senha,
+        Action<string> sucesso, Action<int, string> falha)
+    {
+        string corpo = JsonUtility.ToJson(new LoginDados { email = email, senha = senha });
+        yield return ChamarApi<LoginResposta>("/api/auth/login", "POST", corpo,
+            resposta => { token = resposta.token; sucesso?.Invoke(token); }, falha);
+    }
+
+    public IEnumerator Consultar(Action<Progresso> sucesso, Action<int, string> falha)
+    {
+        yield return ChamarApi<Progresso>(
+            "/api/jogo/progresso", "GET", null, sucesso, falha);
+    }
+
+    public IEnumerator EnviarEstado(EstadoCompleto estado,
+        Action<EnvioResposta> sucesso, Action<int, string> falha)
+    {
+        string corpo = JsonUtility.ToJson(estado);
+        yield return ChamarApi<EnvioResposta>(
+            "/api/jogo/progresso", "POST", corpo, sucesso, falha);
+    }
 }
-
-// Receba estes dados pela tela de login do jogo.
-async function entrar(email, senha) {
-  const login = await chamarAPI('/api/auth/login', {
-    dados: { email, senha }
-  });
-  return login.token;
-}
-
-async function consultar(token) {
-  return chamarAPI('/api/jogo/progresso', { token });
-}
-
-async function enviarEstado(token, estadoCompleto) {
-  return chamarAPI('/api/jogo/progresso', {
-    token,
-    dados: estadoCompleto
-  });
-}
-
-// Uso, depois que o jogador autenticou e o save foi carregado:
-// const atual = await consultar(token);
-// const envio = {
-//   nivel: nivelDoSave,
-//   xp: xpTotalDoSave,
-//   versao: atual.versao + 1,
-//   conquistas: conquistasDoSave
-// };
-// await enviarEstado(token, envio);
-// Guarde o objeto envio até receber confirmação. Se necessário,
-// tente novamente com esse mesmo objeto, sem mudar a versão.
 ```
 
-No navegador, outra porta também conta como outra origem. Esta versão não habilita CORS para origens externas. Sirva o jogo pela mesma origem do Flask ou use um proxy no backend do jogo. Em Unity, Godot ou outro aplicativo nativo, CORS não se aplica; basta enviar as requisições HTTP com os mesmos cabeçalhos e o mesmo JSON.
+Exemplo de uso em outro `MonoBehaviour`, com uma referência ao componente `NexaPlayApi`:
+
+```csharp
+// Receba email e senha do formulário de login do jogo.
+StartCoroutine(api.Entrar(email, senha, token =>
+{
+    StartCoroutine(api.Consultar(atual =>
+    {
+        // Compare o progresso remoto com o save local antes de escolher o estado.
+        // Estes valores são exemplos; use o nível, o XP total e as conquistas do save.
+        var envio = new NexaPlayApi.EstadoCompleto
+        {
+            nivel = 4,
+            xp = 1250,
+            versao = atual.versao + 1,
+            conquistas = new NexaPlayApi.Conquista[]
+            {
+                new NexaPlayApi.Conquista
+                {
+                    codigo = "primeira-vitoria",
+                    nome = "Primeira vitória",
+                    descricao = "Vença a primeira partida."
+                }
+            }
+        };
+
+        // Guarde 'envio' até a confirmação. Se a rede falhar, repita
+        // exatamente o mesmo objeto, sem mudar a versão.
+        StartCoroutine(api.EnviarEstado(envio,
+            resposta => Debug.Log("Sincronizado: " + resposta.progresso.versao),
+            (status, erro) => Debug.LogError($"Erro {status}: {erro}")));
+    }, (status, erro) => Debug.LogError($"Consulta {status}: {erro}")));
+}, (status, erro) => Debug.LogError($"Login {status}: {erro}")));
+```
+
+Ao receber 401 ou 422 por token inválido/expirado, peça login novamente. Em caso de 409, consulte o GET e resolva qual save deve prevalecer. Não aumente automaticamente a versão de um save antigo. O exemplo usa corrotinas, então não bloqueia a execução do jogo enquanto espera a resposta.
 
 ## 7. Teste rápido com cURL
 
-Com uma conta criada no site:
+Com uma conta criada no site publicado:
 
 ```bash
-curl -X POST http://127.0.0.1:5000/api/auth/login \
+curl -X POST https://nexaplay.vercel.app/api/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"jogador@example.com","senha":"SenhaDoJogador123"}'
 ```
@@ -253,7 +383,7 @@ curl -X POST http://127.0.0.1:5000/api/auth/login \
 Copie o token recebido e substitua `SEU_TOKEN` abaixo:
 
 ```bash
-curl -X POST http://127.0.0.1:5000/api/jogo/progresso \
+curl -X POST https://nexaplay.vercel.app/api/jogo/progresso \
   -H 'Authorization: Bearer SEU_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{"nivel":4,"xp":1250,"versao":1,"conquistas":[{"codigo":"primeira-vitoria","nome":"Primeira vitória"}]}'
@@ -262,9 +392,11 @@ curl -X POST http://127.0.0.1:5000/api/jogo/progresso \
 Para conferir o que ficou salvo:
 
 ```bash
-curl http://127.0.0.1:5000/api/jogo/progresso \
+curl https://nexaplay.vercel.app/api/jogo/progresso \
   -H 'Authorization: Bearer SEU_TOKEN'
 ```
+
+Para testar no Flask local, substitua `https://nexaplay.vercel.app` por `http://127.0.0.1:5000` nos comandos acima.
 
 Abra o site com a mesma conta e atualize a página inicial ou o painel Nexa Quest. O nível, XP, número e lista de conquistas devem corresponder ao último envio. Antes da primeira sincronização, o site continua mostrando o progresso das missões locais. Depois dela, o painel e o ranking passam a usar os dados do jogo. Os registros das missões locais são preservados e não se somam ao XP recebido.
 
@@ -280,7 +412,9 @@ Abra o site com a mesma conta e atualize a página inicial ou o painel Nexa Ques
 | 415 | Envie `Content-Type: application/json`. |
 | 500 | Erro inesperado; preserve o mesmo envio para tentar novamente depois. |
 
-Use HTTPS fora do ambiente local. Em celular ou outro computador, `127.0.0.1` é o próprio dispositivo: use o endereço acessível do servidor Flask.
+Use HTTPS fora do ambiente local. Em celular ou outro computador, `127.0.0.1` é o próprio dispositivo: use `https://nexaplay.vercel.app` se a API estiver publicada nele, ou outro endereço acessível do servidor Flask. Em builds nativas da Unity, CORS não se aplica; para Unity WebGL em outro domínio, o backend precisa permitir a origem do jogo.
+
+**Atenção à hospedagem:** não foi possível confirmar daqui se as rotas da API respondem no endereço publicado. Se o site abrir, mas `/api/auth/login` ou `/api/jogo/progresso` retornarem `404` ou `500`, é preciso ajustar a publicação do backend. Em ambiente serverless como a Vercel, um banco SQLite gravado no disco local pode não manter os dados entre execuções; para persistência confiável, configure um banco externo.
 
 O token autoriza apenas a conta do jogador. A API recebe os valores calculados pelo jogo e valida seu formato, mas não verifica se as partidas ocorreram. Se o projeto precisar impedir trapaças, o envio deve partir de um backend confiável que valide as partidas.
 
