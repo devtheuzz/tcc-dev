@@ -1,112 +1,154 @@
 # Nexa Play / Nexa Quest
 
-Site em Flask com templates Jinja, SQLite e API REST com JWT. As páginas e a API usam o mesmo servidor e o mesmo banco. Python 3.12 ou superior.
+Site desenvolvido em **Flask**, utilizando templates Jinja, banco de dados SQLite e API REST com autenticação JWT.
 
-## Rodar
+O frontend e o backend funcionam no mesmo servidor, compartilhando o banco de dados.
 
-Na pasta do projeto, execute:
+**Requisito:** Python 3.12 ou superior.
 
-```bash
-python -m venv .venv
-```
+## Instalação e execução
 
-Ative o ambiente no Linux/macOS:
+Na pasta principal do projeto, instale as dependências:
 
 ```bash
-source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-No Fish: `source .venv/bin/activate.fish`.
-
-No Windows (PowerShell):
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Instale e inicie:
+Inicie o servidor:
 
 ```bash
-python -m pip install -r requirements.txt
 python app.py
 ```
 
-Abra http://127.0.0.1:5000. Não abra os HTMLs diretamente: eles precisam ser renderizados pelo Flask. Também funcionam `python backend/main.py` e `python -m flask --app app run`.
+Acesse:
 
-O banco e uma chave local são criados automaticamente em `backend/instance/`. Para usar variáveis próprias, copie `backend/.env.example` para `backend/.env`. Não publique `.env`, bancos ou chaves.
+http://127.0.0.1:5000
 
-## Estrutura
+As páginas HTML devem ser acessadas pelo servidor Flask, pois utilizam templates Jinja.
 
-| Caminho | Responsabilidade |
+O banco de dados e a chave local são criados automaticamente em `backend/instance/`.
+
+Para configurar variáveis próprias, utilize `backend/.env.example` como referência.
+
+**Importante:** não publique arquivos `.env`, bancos de dados ou chaves privadas.
+
+## Estrutura do projeto
+
+```text
+NexaPlay/
+├── app.py
+├── requirements.txt
+├── backend/
+│   ├── __init__.py
+│   ├── server.py
+│   ├── web.py
+│   ├── api.py
+│   ├── auth.py
+│   ├── game_api.py
+│   ├── game.py
+│   ├── commands.py
+│   ├── database_manager.py
+│   ├── database/
+│   │   └── nexadb.sql
+│   ├── instance/
+│   ├── templates/
+│   └── static/
+└── docs/
+    ├── documentacao_api.md
+    ├── documentacao_api.pdf
+    └── integracao_jogo.md
+```
+
+### Principais arquivos
+
+| Arquivo | Função |
 |---|---|
-| `app.py` | Entrada do servidor e aplicação WSGI |
-| `backend/server.py` | Fábrica `create_app`, configuração e registro de rotas |
-| `backend/web.py` | Páginas, formulários, sessão e proteção CSRF |
-| `backend/api.py` | Endpoints JSON com autenticação JWT |
-| `backend/auth.py` | Validação, cadastro e verificação de senha |
-| `backend/game_api.py` | Mini API de sincronização do jogo |
-| `backend/game.py` | Missões, desafios, pontos e conquistas |
-| `backend/commands.py` | Comandos locais para criar administrador e dados de exemplo |
-| `backend/database_manager.py` | Acesso ao SQLite e migração |
-| `backend/database/nexadb.sql` | Tabelas, índices, níveis e conquistas iniciais |
-| `backend/templates/` | HTML com Jinja e layout compartilhado |
-| `backend/static/` | CSS, JavaScript, imagens, fontes e licença |
-| `docs/documentacao_api.md` | Guia completo de execução e integração |
-| `docs/documentacao_api.pdf` | Versão em PDF do guia |
-| `tests/test_app.py` | Testes de integração |
+| `app.py` | Inicialização do servidor |
+| `backend/server.py` | Configuração do Flask |
+| `backend/web.py` | Páginas e sessões |
+| `backend/api.py` | Endpoints REST |
+| `backend/auth.py` | Cadastro e autenticação |
+| `backend/game_api.py` | Integração com o jogo |
+| `backend/game.py` | Missões, XP e conquistas |
+| `backend/commands.py` | Comandos administrativos |
+| `backend/database_manager.py` | Gerenciamento do SQLite |
+| `backend/templates/` | Páginas HTML |
+| `backend/static/` | CSS, JavaScript e imagens |
+| `docs/` | Documentação do projeto |
 
-A antiga pasta `frontend/` foi incorporada ao pacote Flask. Os recursos usam `url_for('static', filename=...)`, e os links usam `url_for('web.nome_da_rota')`.
+## Funcionalidades
 
-## Experimentar o jogo
-
-O banco começa sem usuários e sem jornadas. Para adicionar uma jornada de exemplo:
-
-```bash
-python -m flask --app app seed-demo
-```
-
-Crie sua conta pelo site, abra **Explorar**, entre na jornada e inicie a missão. Responda `print` ao desafio e conclua a missão. O fluxo concede 100 XP no total e desbloqueia duas conquistas. Repetir a conclusão não concede pontos extras.
-
-Para criar um administrador, execute o comando e preencha os campos solicitados:
-
-```bash
-python -m flask --app app create-admin
-```
-
-A administração dos conteúdos é feita pela API. Não há painel administrativo visual.
-
-## Testar
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-Os testes usam bancos temporários, sem modificar os dados do site.
+- Cadastro e login com senhas protegidas por hash.
+- Autenticação por sessão no site e JWT na API.
+- Perfil de usuário com nível, XP e conquistas.
+- Ranking de jogadores.
+- Jornadas, missões e desafios.
+- Sincronização de progresso com o jogo.
+- Modo claro e escuro.
+- Formulário de contato com armazenamento no banco de dados.
 
 ## Integração com o jogo
 
-O jogo pode consultar e enviar nível, XP total e conquistas em `GET` e `POST /api/jogo/progresso`, usando o JWT da própria conta. Cada novo envio tem uma `versao` crescente. Envios idênticos podem ser repetidos sem duplicar XP.
+A Nexa Play disponibiliza uma API REST para receber e consultar o progresso dos jogadores.
 
-O guia para o desenvolvedor do jogo está em [docs/integracao_jogo.md](docs/integracao_jogo.md), com o formato JSON, autenticação, tratamento de erros e exemplos de JavaScript e cURL.
+**Endpoint:**
 
-Após a primeira sincronização, o painel e o ranking passam a exibir o estado enviado pelo jogo. As missões locais continuam salvas separadamente. Atualize a página do site para ver o último envio.
+```http
+GET /api/jogo/progresso
+POST /api/jogo/progresso
+```
 
-## Recursos e limites
+Os dados sincronizados incluem:
 
-- Cadastro e login reais com senha armazenada como hash.
-- Site autenticado por cookie de sessão; API autenticada por Bearer JWT.
-- Perfil, progresso, XP e conquistas lidos do SQLite.
-- Modo escuro com cores separadas para fundo, texto e campos.
-- Login e cadastro com ilustração proporcional, sem sobrepor o texto.
-- Formulário de contato grava em `mensagens_contato`; não envia e-mail.
-- Tema dia/noite salvo neste navegador.
-- Personalização do mascote ainda não implementada; botão identificado como “Em breve”.
-- Oficinas, eventos e redes sociais mantêm o conteúdo visual original; não possuem gestão própria.
-- Desafios com correção automática exigem `resposta_correta`. Atividades com avaliação manual não têm fluxo de revisão nesta versão.
+- Nível do jogador.
+- XP total.
+- Conquistas desbloqueadas.
+- Versão do progresso.
 
-Para publicar, use um servidor WSGI, configure chaves próprias, HTTPS e `COOKIE_SECURE=1`. O comando `python app.py` serve para desenvolvimento local.
+A autenticação utiliza o token JWT da conta Nexa Play.
+
+Cada atualização deve possuir uma versão crescente para evitar conflitos e duplicação de progresso.
+
+### Endereço da API
+
+**Produção:**
+
+```text
+https://nexaplay.vercel.app
+```
+
+**Desenvolvimento local:**
+
+```text
+http://127.0.0.1:5000
+```
+
+O endereço de produção pode ser utilizado caso a API esteja publicada e funcionando corretamente.
+
+A documentação de integração está disponível em:
+
+`docs/integracao_jogo.md`
+
+## Banco de dados
+
+O projeto utiliza SQLite para armazenar usuários, jornadas, missões, conquistas, progresso e mensagens de contato.
+
+O banco é inicializado automaticamente na primeira execução.
+
+**Atenção:** em hospedagens como a Vercel, o armazenamento local não é persistente. Para uso em produção, é necessário configurar um banco de dados persistente.
 
 ## Documentação
 
-O PDF geral corresponde à documentação Flask anterior à integração do jogo. Para as novas rotas, consulte `docs/integracao_jogo.md`.
+Os arquivos de documentação estão disponíveis na pasta `docs/`.
 
+- `documentacao_api.md`: documentação geral.
+- `documentacao_api.pdf`: documentação em PDF.
+- `integracao_jogo.md`: integração do jogo com a API.
+
+## Tecnologias
+
+- **Backend:** Python e Flask
+- **Frontend:** HTML, CSS, JavaScript e Jinja2
+- **Banco de dados:** SQLite
+- **Autenticação:** JWT e sessões Flask
+- **API:** REST com JSON
