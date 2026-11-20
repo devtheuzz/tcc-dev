@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="auth-header section-container"><a href="{{ url_for('web.home') }}" aria-label="Voltar para o início"><img src="{{ url_for('static', filename='images/logo-stacked.png') }}" alt="Nexa Play" width="84" height="66"></a><div class="auth-tools"><button type="button" class="text-action" data-theme-toggle><span data-theme-label>Ativar modo escuro</span></button><a class="back-text" href="{{ url_for('web.home') }}">← Voltar ao início</a></div></header>
+<main id="conteudo" class="auth-layout section-container">
+    <section class="auth-aside"><p class="eyebrow">BEM-VINDA(O) DE VOLTA</p><h1>Sua próxima missão começa aqui.</h1><p>Acesse sua jornada e continue evoluindo no universo Nexa Play.</p><img src="{{ url_for('static', filename='images/home-hero.png') }}" alt="" width="1536" height="1024" aria-hidden="true"></section>
+    <section class="auth-card"><p class="eyebrow">CONTA NEXA PLAY</p><h2>Entrar</h2><p>Entre com o e-mail e a senha da sua conta.</p>
+      <form id="login-form" method="post" action="{{ url_for('web.login') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="next" value="{{ next_url }}">
+{% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        <label for="login-email">Seu email<input id="login-email" name="email" value="{{ request.form.get('email', '') }}" type="email" maxlength="150" autocomplete="email" placeholder="voce@email.com" required></label>
+        <label for="login-password">Senha<input id="login-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="Mínimo de 8 caracteres" required></label>
+        <button class="button button-large" type="submit">Entrar <span aria-hidden="true">⟶</span></button>
+      </form>
+      
+      <p class="auth-switch">Ainda não tem conta? <a href="{{ url_for('web.cadastro', next=next_url) }}">Criar conta</a></p>
+    </section>
+  </main>
+{% endblock %}

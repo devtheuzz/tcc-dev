@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="conteudo">
+    <section class="interior-hero about-hero" aria-labelledby="page-title">
+      <div class="interior-hero-inner">
+        <img class="interior-art about-art" src="{{ url_for('static', filename='images/about-hero.png') }}" alt="" width="1584" height="672" aria-hidden="true">
+        <div class="interior-copy about-copy"><p class="eyebrow">SOBRE</p><h1 id="page-title">Nexa Play: Tecnologia e educação.</h1><p>Uma marca que acredita no poder da educação e da tecnologia para transformar ideias em oportunidades.</p></div>
+      </div>
+    </section>
+    <section class="about-content section-container">
+      <div class="about-story">
+        <div class="story-copy"><p>A Nexa Play nasceu em 2022 com o propósito de transformar o jeito como os jovens aprendem e se conectam. Acreditamos que o conhecimento pode ser leve, interativo e cheio de possibilidades. Por isso, criamos uma plataforma que une gamificação e conteúdo educativo.</p></div>
+        <div class="story-stat"><span class="stat-people" aria-hidden="true">♟♟</span><strong>12.500+</strong><span>PESSOAS ATIVAS</span></div>
+        <div class="story-stat"><strong>800M+</strong><span>AVALIAÇÕES</span><span class="stat-like" aria-hidden="true">♥</span></div>
+      </div>
+      <a class="contact-strip" href="{{ url_for('web.contato') }}"><span class="strip-bulb" aria-hidden="true">✦</span><span><strong>Vamos construir juntos?</strong><span>Alguma dúvida, dica ou sugestão? Mande já!</span></span><span class="button button-small">Fale com a gente <span aria-hidden="true">⟶</span></span></a>
+    </section>
+  </main>
+{% endblock %}

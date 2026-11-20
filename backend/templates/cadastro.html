@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<header class="auth-header section-container"><a href="{{ url_for('web.home') }}" aria-label="Voltar para o início"><img src="{{ url_for('static', filename='images/logo-stacked.png') }}" alt="Nexa Play" width="84" height="66"></a><div class="auth-tools"><button type="button" class="text-action" data-theme-toggle><span data-theme-label>Ativar modo escuro</span></button><a class="back-text" href="{{ url_for('web.home') }}">← Voltar ao início</a></div></header>
+<main id="conteudo" class="auth-layout section-container">
+    <section class="auth-aside"><p class="eyebrow">NOVA JORNADA</p><h1>Crie seu perfil e venha jogar.</h1><p>Uma experiência de aprendizagem com desafios, missões e descobertas.</p><img src="{{ url_for('static', filename='images/home-hero.png') }}" alt="" width="1536" height="1024" aria-hidden="true"></section>
+    <section class="auth-card"><p class="eyebrow">CONTA NEXA PLAY</p><h2>Criar conta</h2><p>Preencha os campos para criar sua conta.</p>
+      <form id="register-form" method="post" action="{{ url_for('web.cadastro') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="next" value="{{ next_url }}">
+{% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+        <label for="register-name">Seu nome<input id="register-name" name="name" value="{{ request.form.get('name', '') }}" autocomplete="name" maxlength="100" placeholder="Seu nome" required></label>
+        <label for="register-email">Seu email<input id="register-email" name="email" value="{{ request.form.get('email', '') }}" type="email" maxlength="150" autocomplete="email" placeholder="voce@email.com" required></label>
+        <label for="register-password">Crie uma senha<input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Mínimo de 8 caracteres" required></label>
+        <button class="button button-large" type="submit">Criar conta <span aria-hidden="true">⟶</span></button>
+      </form>
+      
+      <p class="auth-switch">Já tem uma conta? <a href="{{ url_for('web.login', next=next_url) }}">Entrar</a></p>
+    </section>
+  </main>
+{% endblock %}

@@ -1,0 +1,4 @@
+{% extends 'base.html' %}
+{% block content %}
+<main id="conteudo" class="section-container error-page"><h1>{{ status }}</h1><p>{{ message }}</p><a class="button" href="{{ url_for('web.home') }}">Voltar ao início</a></main>
+{% endblock %}

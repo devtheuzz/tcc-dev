@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f3e7">
+  <meta name="description" content="Nexa Play: educação, criatividade, jornadas e conquistas.">
+  <title>{{ title|default('Nexa Play') }} | Nexa Play</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/nunito-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
+</head>
+<body data-page="{{ page|default('') }}" class="{% if layout|default('') == 'auth' %}auth-page{% elif layout|default('') == 'contact' %}contact-page{% endif %}">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  {% if layout|default('') not in ('auth', 'contact') %}{% include 'header.html' %}{% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<div class="flash-messages section-container" role="status">{% for category, message in messages %}<p class="flash-{{ category }}">{{ message }}</p>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+  {% if layout|default('') not in ('auth', 'contact') %}{% include 'footer.html' %}{% endif %}
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

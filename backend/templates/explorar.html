@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="conteudo">
+    <section class="interior-hero explore-hero" aria-labelledby="page-title">
+      <div class="interior-hero-inner">
+        <div class="interior-copy"><p class="eyebrow">EXPLORAR</p><h1 id="page-title">Conhecimento e muitas possibilidades.</h1><p>Aqui você encontra jornadas de aprendizagem, conteúdos, eventos e experiências interativas para desenvolver suas habilidades e viver novas histórias.</p></div>
+        <img class="interior-art compass-art" src="{{ url_for('static', filename='images/explore-hero.png') }}" alt="" width="1985" height="792" aria-hidden="true">
+      </div>
+    </section>
+    <section class="explore-content section-container">
+      <div class="explore-card-grid">
+        <article class="explore-card"><span class="round-icon" aria-hidden="true">⌂</span><h2>Jornadas de aprendizagem</h2><p>Trilhas para diferentes áreas.</p></article>
+        <article class="explore-card"><span class="round-icon" aria-hidden="true">✦</span><h2>Oficinas e atividades</h2><p>Aprenda na prática com quem entende.</p></article>
+        <article class="explore-card"><span class="round-icon" aria-hidden="true">▣</span><h2>Conteúdos</h2><p>Explore vídeos, artigos e materiais exclusivos.</p></article>
+        <article class="explore-card"><span class="round-icon" aria-hidden="true">◇</span><h2>Eventos</h2><p>Participe de lives, encontros e muito mais.</p></article>
+      </div>
+      <section class="journey-list" aria-labelledby="journeys-title"><h2 id="journeys-title">Jornadas disponíveis</h2><div class="explore-card-grid">{% for journey in journeys %}<article class="explore-card"><h3>{{ journey.titulo }}</h3><p>{{ journey.descricao or '' }}</p><a class="button" href="{{ url_for('web.journey', journey_id=journey.id_jornada) }}">Abrir jornada</a></article>{% else %}<p>Nenhuma jornada publicada ainda.</p>{% endfor %}</div></section><div class="featured-area">
+        <h2>EM DESTAQUE</h2>
+        <article class="featured-project"><div><span class="project-label">Nexa Quest</span><p>Uma aventura educativa de desafios, missões e conquistas.</p><a class="button button-dark" href="{{ url_for('web.quest') }}">Explore <span aria-hidden="true">⟶</span></a></div><img src="{{ url_for('static', filename='images/logo-quest.png') }}" alt="Personagem e logotipo Nexa Quest" width="270" height="140" loading="lazy"></article>
+      </div>
+    </section>
+  </main>
+{% endblock %}

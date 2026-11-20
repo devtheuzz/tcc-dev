@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="conteudo">
+    <section class="quest-guest section-container" data-auth-state="guest" {% if user %}hidden{% endif %}>
+      <div><p class="eyebrow">SUA PRÓXIMA AVENTURA</p><h1>Entre no Nexa Quest</h1><p>Faça login para acompanhar seu nível, XP e conquistas na sua conta.</p><a class="button button-large" href="{{ url_for('web.login', next=url_for('web.quest')) }}">Entrar <span aria-hidden="true">⟶</span></a></div>
+      <img src="{{ url_for('static', filename='images/logo-quest.png') }}" alt="Nexa Quest e seu mascote" width="360" height="190">
+    </section>
+    <section class="member-dashboard" data-auth-state="member" {% if not user %}hidden{% endif %} aria-labelledby="dashboard-title">
+      <div class="dashboard-hero"><div class="dashboard-hero-inner section-container">
+        <div><p class="hero-brandline">OLÁ, <span data-user-first>{{ user.nome.split()[0] if user else '' }}</span></p><h1 id="dashboard-title">Continue sua jornada!</h1><a class="button button-large" href="#progresso">Entre no Nexa Quest <span aria-hidden="true">⟶</span></a></div>
+        <div class="member-quick-stats"><article class="quick-stat"><span class="stat-symbol" aria-hidden="true">★</span><span>Nível</span><strong>{{ stats.level_number }}</strong></article><article class="quick-stat"><span class="stat-symbol">XP</span><strong>{{ stats.points }}</strong><span>xp</span></article><article class="quick-stat"><span class="stat-symbol" aria-hidden="true">♜</span><strong>{{ stats.achievements|length }}</strong><span>Conquistas</span></article></div>
+      </div></div>
+      <div class="dashboard-content section-container">
+        <p><a class="button" href="{{ url_for('web.explorar') }}">Explorar jornadas</a></p><div class="quest-title-band"><h2>NEXA QUEST</h2><img src="{{ url_for('static', filename='images/quest-wordmark.png') }}" alt="Mascote Nexa Quest" width="240" height="130" loading="lazy"></div>
+        <section class="progress-card" id="progresso" aria-labelledby="progress-title">
+          <div class="progress-intro"><span class="progress-bars" aria-hidden="true"><i></i><i></i><i></i></span><div><h3 id="progress-title">Seu progresso</h3><p>Como você está evoluindo no universo Nexa Quest, cada conquista te aproxima do próximo nível!</p></div></div>
+          <div class="progress-meter"><div class="progress-head"><strong>{{ stats.level }}</strong></div>{% if stats.source == 'site' %}<div class="progress-track" role="progressbar" aria-label="Progresso para o próximo nível" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ stats.percent }}"><span style="width: {{ stats.percent }}%"></span></div><p>{{ stats.points }} XP{% if stats.next_level %} / {{ stats.next_level.pontos_minimos }} XP para {{ stats.next_level.nome }}{% else %} · Nível máximo{% endif %}</p>{% else %}<p>{{ stats.points }} XP acumulados</p><p class="sync-note">Progresso recebido do jogo.</p>{% endif %}</div>
+        </section>
+        <section class="achievement-area" aria-labelledby="achievement-title"><h2 id="achievement-title">SUAS CONQUISTAS</h2><div class="achievement-grid">{% for achievement in stats.achievements %}<article class="achievement-card"><span aria-hidden="true">★</span><p>{{ achievement.nome }}</p><small>{{ achievement.descricao }}</small></article>{% else %}<p>{% if stats.source == 'jogo' %}Nenhuma conquista enviada pelo jogo ainda.{% else %}Conclua missões para desbloquear suas primeiras conquistas.{% endif %}</p>{% endfor %}</div></section>
+      </div>
+    </section>
+    <section class="campaign-banner section-container" aria-label="Juntos, criamos novas possibilidades"><div><h2>Juntos, criamos novas<br>possibilidades.</h2><p>Venha fazer parte da Nexa Play!</p></div></section>
+  </main>
+{% endblock %}

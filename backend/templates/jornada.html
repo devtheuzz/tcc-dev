@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<main id="conteudo" class="section-container journey-page">
+  <a href="{{ url_for('web.explorar') }}">← Explorar</a>
+  <h1>{{ journey.titulo }}</h1><p>{{ journey.descricao or '' }}</p>
+  {% if not user %}<p><a class="button" href="{{ url_for('web.login', next=request.path) }}">Entre para iniciar as missões</a></p>{% endif %}
+  {% for mission in missions %}
+  <article class="mission-card">
+    <h2>{{ mission.titulo }}</h2><p>{{ mission.descricao or '' }}</p><p>Recompensa: {{ mission.pontos_recompensa }} XP</p>
+    {% for content in mission.contents %}<section><h3>{{ content.titulo }}</h3><p>{{ content.descricao or '' }}</p>{% if content.url and (content.url.startswith('https://') or content.url.startswith('http://')) %}<a href="{{ content.url }}" target="_blank" rel="noopener noreferrer">Abrir material</a>{% endif %}</section>{% endfor %}
+    {% if user %}
+      {% if not mission.progress %}
+      <form method="post" action="{{ url_for('web.mission_action', mission_id=mission.id_missao, action='iniciar') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button" type="submit">Iniciar missão</button></form>
+      {% elif mission.progress.status == 'concluida' %}<p class="flash-success">Missão concluída!</p>
+      {% else %}
+        {% for challenge in mission.challenges %}<section class="challenge-card"><h3>{{ challenge.titulo }}</h3><p>{{ challenge.descricao or '' }}</p><p>{{ challenge.pontos_recompensa }} XP</p><form method="post" action="{{ url_for('web.challenge_action', challenge_id=challenge.id_desafio) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label for="answer-{{ challenge.id_desafio }}">Sua resposta</label><input id="answer-{{ challenge.id_desafio }}" name="answer" required maxlength="10000"><button class="button" type="submit">Responder</button></form></section>{% endfor %}
+        <form method="post" action="{{ url_for('web.mission_action', mission_id=mission.id_missao, action='concluir') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button" type="submit">Concluir missão</button></form>
+      {% endif %}
+    {% endif %}
+  </article>
+  {% else %}<p>Esta jornada ainda não tem missões publicadas.</p>{% endfor %}
+</main>
+{% endblock %}

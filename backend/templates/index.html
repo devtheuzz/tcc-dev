@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="conteudo">
+    <section class="home-hero guest-view" data-auth-state="guest" {% if user %}hidden{% endif %} aria-labelledby="home-title">
+      <div class="home-hero-inner">
+        <div class="home-copy">
+          <p class="hero-brandline">NEXA PLAY</p>
+          <h1 id="home-title">SUA JORNADA<br>COMEÇA AQUI.</h1>
+          <p class="hero-tagline">Aprenda. Desafie-se. Evolua.</p>
+          <p class="hero-description">A Nexa Play é uma marca que conecta educação, criatividade e tecnologia para transformar ideias em experiências reais.</p>
+          <a class="button button-large" href="{{ url_for('web.explorar') }}">Comece a jornada <span aria-hidden="true">⟶</span></a>
+        </div>
+        <div class="home-art" aria-hidden="true"><img src="{{ url_for('static', filename='images/home-hero.png') }}" alt="" width="1536" height="1024"></div>
+      </div>
+    </section>
+
+    <section class="member-welcome" data-auth-state="member" {% if not user %}hidden{% endif %} aria-labelledby="welcome-title">
+      <div class="member-welcome-inner">
+        <div class="member-welcome-copy">
+          <p class="hero-brandline">OLÁ, <span data-user-first>{{ user.nome.split()[0] if user else '' }}</span></p>
+          <h1 id="welcome-title">Que bom ter você por aqui!</h1>
+          <p class="hero-tagline">Aprenda. Desafie-se. Evolua.</p>
+          <p>A Nexa Play conecta educação, criatividade e tecnologia para transformar ideias em experiências reais.</p>
+          <a class="button button-large" href="{{ url_for('web.quest') }}">Entre no Nexa Quest <span aria-hidden="true">⟶</span></a>
+        </div>
+        <div class="member-quick-stats" aria-label="Seu resumo de jogo">
+          <article class="quick-stat"><span class="stat-symbol" aria-hidden="true">★</span><span>Nível</span><strong>{{ stats.level_number }}</strong></article>
+          <article class="quick-stat"><span class="stat-symbol">XP</span><strong>{{ stats.points }}</strong><span>xp</span></article>
+          <article class="quick-stat"><span class="stat-symbol" aria-hidden="true">♜</span><strong>{{ stats.achievements|length }}</strong><span>Conquistas</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="universe-section guest-view" data-auth-state="guest" {% if user %}hidden{% endif %} aria-labelledby="universe-title">
+      <div class="section-container universe-layout">
+        <div class="section-copy">
+          <p class="eyebrow">Projetos, experiências e muito mais.</p>
+          <h2 id="universe-title">EXPLORE O UNIVERSO NEXA</h2>
+          <p>A Nexa Play reúne iniciativas que vão além do digital, com projetos e parcerias que conectam pessoas, ideias e futuros.</p>
+        </div>
+        <div class="universe-cards">
+          <a class="info-card" href="{{ url_for('web.quest') }}">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 16h22c3 0 5 2 6 5l3 11c1 4-3 7-6 5l-8-6H18l-8 6c-3 2-7-1-6-5l3-11c1-3 3-5 6-5Z"/><path d="M15 22v10m-5-5h10m13-2h.1m5 5h.1"/></svg>
+            <strong>Projetos</strong><span>Conheça a Nexa Quest e outras parcerias e iniciativas da marca.</span>
+          </a>
+          <a class="info-card" href="{{ url_for('web.explorar') }}">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="m31 15-5 12-12 6 5-12 12-6Z"/></svg>
+            <strong>Explorar</strong><span>Comunidade, oficinas e conteúdos.</span>
+          </a>
+          <a class="info-card" href="{{ url_for('web.sobre') }}">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18"/><path d="M24 22v12m0-21h.1"/></svg>
+            <strong>Sobre</strong><span>Um pouco da nossa história, parcerias e pilares.</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="quest-promo guest-view" data-auth-state="guest" {% if user %}hidden{% endif %} aria-labelledby="quest-promo-title">
+      <div class="quest-promo-inner">
+        <div><p>Conheça o</p><h2 id="quest-promo-title">NEXA QUEST</h2><p>Desafios, missões e conquistas em uma experiência feita para você.</p><a class="button button-dark" href="{{ url_for('web.quest') }}">Saiba mais <span aria-hidden="true">⟶</span></a></div>
+        <span class="quest-promo-mark" aria-hidden="true">NQ</span>
+      </div>
+    </section>
+
+    <section class="how-section guest-view" data-auth-state="guest" {% if user %}hidden{% endif %} aria-labelledby="how-title">
+      <div class="how-inner section-container">
+        <div class="how-copy"><p>Como funciona?</p><h2 id="how-title">É SIMPLES,<br><span>E MUITO DIVERTIDO.</span></h2><p>Aqui, você escolhe sua jornada, enfrenta desafios, ganha XP, desbloqueia conquistas e muito mais.</p></div>
+        <div class="how-steps">
+          <article><span class="step-icon" aria-hidden="true">◎</span><h3>MISSÕES</h3><p>Complete desafios e avance na sua jornada.</p></article>
+          <article><span class="step-icon" aria-hidden="true">♜</span><h3>CONQUISTE</h3><p>Mostre suas conquistas e compartilhe sua jornada.</p></article>
+          <article><span class="step-icon" aria-hidden="true">ϟ</span><h3>EVOLUA</h3><p>Ganhe XP, suba de nível e desbloqueie novos conteúdos.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="events-section section-container" aria-labelledby="events-title">
+      <div class="events-intro"><p class="eyebrow">Fique por dentro de tudo que rola por aqui.</p><h2 id="events-title">NOVIDADES E EVENTOS</h2><p>Acompanhe nossos eventos, parcerias e novidades da Nexa Play.</p></div>
+      <div class="event-grid">
+        <article class="event-card"><img src="{{ url_for('static', filename='images/event-workshop.png') }}" alt="Pessoa trabalhando em uma estação de criação digital." width="2499" height="1823" loading="lazy"><div><span class="event-type">EVENTO</span><h3>Oficina de criação</h3><p>20 jan, 2027</p><p>Rio de Janeiro - RJ</p></div></article>
+        <article class="event-card"><img src="{{ url_for('static', filename='images/event-partnership.jpg') }}" alt="Parceria sendo celebrada em uma reunião." width="2499" height="1666" loading="lazy"><div><span class="event-type">PARCERIA</span><h3>Nexa Play e SESI Firjan</h3><p>10 dez, 2027</p><p>Rio de Janeiro - RJ</p></div></article>
+        <article class="event-card event-card-note"><div class="event-note-art"><span>VEM COISA NOVA<br>POR AÍ!</span></div><div><span class="event-type">NOVIDADE</span><h3>Novo projeto em breve!</h3><p>02 nov, 2026</p><p>Online</p></div></article>
+      </div>
+    </section>
+
+    <section class="campaign-banner section-container" aria-label="Juntos, criamos novas possibilidades"><div><h2>Juntos, criamos novas<br>possibilidades.</h2><p>Venha fazer parte da Nexa Play!</p></div></section>
+  </main>
+{% endblock %}
