@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from .database_manager import SQLManager
 from .api import register_api
@@ -12,7 +13,6 @@ from .commands import register_commands
 from .game_api import api as game_api
 
 BASE_DIR = Path(__file__).resolve().parent
-
 
 def create_app(test_config=None):
     load_dotenv(BASE_DIR / '.env')
@@ -30,8 +30,15 @@ def create_app(test_config=None):
     )
     if test_config:
         app.config.update(test_config)
-    # Chave local estável sem obrigar o usuário a editar o código.
-    # Em produção, configure SECRET_KEY e JWT_SECRET_KEY no ambiente.
+    CORS(
+        app,
+        resources={r"/*": {"origins": "*"}},
+        methods=['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allow_headers='*',
+        send_wildcard=True,
+        supports_credentials=False,
+        max_age=600,
+    )
     if not app.config['SECRET_KEY']:
         secret_path = BASE_DIR / 'instance' / 'secret_key'
         secret_path.parent.mkdir(parents=True, exist_ok=True)
@@ -57,6 +64,9 @@ def create_app(test_config=None):
 
     @app.before_request
     def validate_json():
+        # O preflight não tem corpo JSON nem precisa de autenticação.
+        if request.method == 'OPTIONS':
+            return None
         if request.path.startswith('/api/') and request.is_json:
             if not isinstance(request.get_json(silent=True), dict):
                 return jsonify(erro='Envie um objeto JSON válido.'), 400
